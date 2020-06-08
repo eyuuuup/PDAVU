@@ -107,7 +107,7 @@ bool step() {
     case OP_BIPUSH:
     {
       printf("BIPUSH ");
-      
+
       initMachine->counter++;
       printf("%d, or %x\n", initMachine->textData[initMachine->counter],initMachine->textData[initMachine->counter]);
       push(initMachine->textData[initMachine->counter]);
@@ -362,10 +362,17 @@ bool step() {
       printf("LDC_W ");
 
       initMachine->counter++;
-      for(int i = 0; i < 2; i++) {
-        printf("%x ", initMachine->textData[initMachine->counter]);
-        initMachine->counter++;
-      };
+      byte_t firstElement = initMachine->textData[initMachine->counter];
+      printf("%x ", initMachine->textData[initMachine->counter]);
+      byte_t secondElement = initMachine->textData[initMachine->counter + 1];
+      printf("%x ", initMachine->textData[initMachine->counter + 1]);
+
+      unsigned short index = (firstElement << 8) | secondElement;
+      printf(", or %d\n", index);
+    
+      word_t args = get_constant(index);
+      push(args);
+      initMachine -> counter = initMachine -> counter + 2;
       printf("\n");
 
       break;
@@ -441,6 +448,22 @@ int get_program_counter() {
 
 byte_t get_instruction() {
   return initMachine->textData[initMachine->counter];
+}
+
+word_t get_constant(int index) {
+  byte_t array[4];
+
+  for(int i = 0; i < 4; i++) {
+    array[i] = initMachine -> constantData[index * 4 + i];
+  }
+
+  word_t result = (array[0] << 24) | (array[1] << 16) | (array[2] << 8) | array[3];
+  return result;
+
+}
+
+word_t get_local_variable(int index) {
+  return 0;
 }
 
 int text_size() {
