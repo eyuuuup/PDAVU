@@ -1,6 +1,7 @@
 #include <ijvm.h>
 #include <stdlib.h>
 #include <stack.h>
+#include <utility.h>
 
 //TODO CONSTANT AND TEXT BLOCKS INTO STRUCTS
 struct ijvm_machine {
@@ -77,17 +78,9 @@ int init_ijvm(char *binary_file) {
   initMachine -> constantData = constantData;
   initMachine -> textData = textData;
 
-  //Debugging
-  for (int i = 0; i < initMachine -> constantSize; i++) {
-    printf("%x ", initMachine -> constantData[i]);
-  }
-  printf("\n");
-  for (int i = 0; i < initMachine -> textSize; i++) {
-    printf("%x ", initMachine -> textData[i]);
-  }
-  printf("\n");
-
   init_stack();
+
+  print_blocks();
   
   return 0;
 }
@@ -114,27 +107,31 @@ bool step() {
     case OP_BIPUSH:
     {
       printf("BIPUSH ");
+      
       initMachine->counter++;
       printf("%d, or %x\n", initMachine->textData[initMachine->counter],initMachine->textData[initMachine->counter]);
       push(initMachine->textData[initMachine->counter]);
       initMachine->counter++;
+
       break;
     }
     case OP_DUP:
     {
       printf("DUP\n");
+
       initMachine->counter++;
       word_t copy = top();
       push(copy);
-
 
       break;
     }
     case OP_ERR:
     {
       printf("ERR\n");
+
       initMachine->counter++;
       return false;
+
       break;
     }
     case OP_GOTO:
@@ -152,39 +149,41 @@ bool step() {
       signed short args = (firstElement << 8) | secondElement;
       initMachine -> counter = initMachine -> counter + args - 1;
       printf(", or %d", args);
-
       printf("\n");
+
       break;
     }
     case OP_HALT:
     {
       printf("HALT\n");
+
       initMachine->counter++;
       return false;
+
       break;
     }
     case OP_IADD:
     {
       printf("IADD\n");
 
+      initMachine->counter++;
       int firstElement = pop();
       int secondElement = pop();
       int result = firstElement + secondElement;
       push(result);
 
-      initMachine->counter++;
       break;
     }
     case OP_IAND:
     {
       printf("IAND\n");
 
+      initMachine->counter++;
       int firstElement = pop();
       int secondElement = pop();  
       int result = firstElement & secondElement;
       push(result);
-
-      initMachine->counter++;
+      
       break;
     }
     case OP_IFEQ:
@@ -192,7 +191,6 @@ bool step() {
       printf("IFEQ ");
 
       initMachine->counter++;
-
       byte_t firstElement = initMachine->textData[initMachine->counter];
       printf("%x ", initMachine->textData[initMachine->counter]);
       byte_t secondElement = initMachine->textData[initMachine->counter + 1];
@@ -210,15 +208,15 @@ bool step() {
       }
       
       printf(", or %d", args);
-
       printf("\n");
+
       break;
     }
     case OP_IFLT:
     {
       printf("IFLT ");
-      initMachine->counter++;
 
+      initMachine->counter++;
       byte_t firstElement = initMachine->textData[initMachine->counter];
       printf("%x ", initMachine->textData[initMachine->counter]);
       byte_t secondElement = initMachine->textData[initMachine->counter + 1];
@@ -237,13 +235,14 @@ bool step() {
       
       printf(", or %d", args);
       printf("\n");
+
       break;
     }
     case OP_ICMPEQ:
     {
       printf("ICMPEQ ");
-      initMachine->counter++;
 
+      initMachine->counter++;
       byte_t firstElement = initMachine->textData[initMachine->counter];
       printf("%x ", initMachine->textData[initMachine->counter]);
       byte_t secondElement = initMachine->textData[initMachine->counter + 1];
@@ -265,136 +264,156 @@ bool step() {
       
       printf(", or %d", args);
       printf("\n");
+
       break;
     }
     case OP_IINC:
     {
       printf("IINC");
+
       initMachine->counter++;
       printf("%x\n", initMachine->textData[initMachine->counter]);
       initMachine->counter++;
       printf("%x\n", initMachine->textData[initMachine->counter]);
       initMachine->counter++;
+
       break;
     }
     case OP_ILOAD:
     {
       printf("ILOAD");
+
       initMachine->counter++;
       printf("%x\n", initMachine->textData[initMachine->counter]);
       initMachine->counter++;
+
       break;
     }
     case OP_IN:
     {
       printf("IN\n");
-      
+
+      initMachine->counter++;
       int result = getc(in);
 
       if (result == EOF) {
         push(0);
       } else push(result);
-
-      initMachine->counter++;
+      
       break;
     }
     case OP_INVOKEVIRTUAL:
     {
       printf("INVOKEVIRTUAL");
+
       initMachine->counter++;
       for(int i = 0; i < 2; i++) {
         printf("%x ", initMachine->textData[initMachine->counter]);
         initMachine->counter++;
       };
       printf("\n");
+
       break;
     }
     case OP_IOR:
     {
       printf("IOR\n");
 
+      initMachine->counter++;
       int firstElement = pop();
       int secondElement = pop();
       int result = firstElement | secondElement;
       push(result);
 
-      initMachine->counter++;
       break;
     }
     case OP_IRETURN:
     {
       printf("IRETURN\n");
+
       initMachine->counter++;
+
       break;
     }
     case OP_ISTORE:
     {
       printf("ISTORE");
+
       initMachine->counter++;
       printf("%x\n", initMachine->textData[initMachine->counter]);
       initMachine->counter++;
+
       break;
     }
     case OP_ISUB:
     {
       printf("ISUB\n");
 
+      initMachine->counter++;
       int firstElement = pop();
       int secondElement = pop();
       int result = secondElement - firstElement;
       push(result);
-
-      initMachine->counter++;
+      
       break;
     }
     case OP_LDC_W:
     {
       printf("LDC_W ");
+
       initMachine->counter++;
       for(int i = 0; i < 2; i++) {
         printf("%x ", initMachine->textData[initMachine->counter]);
         initMachine->counter++;
       };
       printf("\n");
+
       break;
     }
     case OP_NOP:
     {
       printf("NOP\n");
+
       initMachine->counter++;
+
       break;
     }
     case OP_OUT:
     {
       printf("OUT\n");
+
+      initMachine->counter++;
       int result = pop();
       fprintf(out,"%d", result);
 
-      initMachine->counter++;
       break;
     }
     case OP_POP:
     {
       printf("POP\n");
-      pop();
+
       initMachine->counter++;
+      pop();
+      
       break;
     }
     case OP_SWAP:
     {
       printf("SWAP\n");
 
+      initMachine->counter++;
       int firstElement = pop();
       int secondElement = pop();
       push(firstElement);
       push(secondElement);
-      initMachine->counter++;
+      
       break;
     }
     case OP_WIDE:
     {
-      printf("WIDE\n");
       initMachine->counter++;
+      printf("WIDE\n");
+      
       break;
     }
     default:
@@ -426,4 +445,15 @@ byte_t get_instruction() {
 
 int text_size() {
   return initMachine->textSize;
+}
+
+void print_blocks() {
+  for (int i = 0; i < initMachine -> constantSize; i++) {
+    printf("%x ", initMachine -> constantData[i]);
+  }
+  printf("\n");
+  for (int i = 0; i < initMachine -> textSize; i++) {
+    printf("%x ", initMachine -> textData[i]);
+  }
+  printf("\n");
 }

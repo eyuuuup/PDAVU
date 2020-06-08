@@ -1,1 +1,2 @@
-obj/machine.o: src/machine.c include/ijvm.h include/stack.h
+obj/machine.o: src/machine.c include/ijvm.h include/stack.h \
+ include/utility.h

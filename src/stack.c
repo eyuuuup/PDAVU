@@ -10,7 +10,6 @@ struct stack {
 
 static struct stack *stack;
 
-
 int init_stack() {
     stack = (struct stack *)malloc(sizeof(struct stack));
     stack -> stackArray = (word_t *)malloc(sizeof(word_t) * 10);
