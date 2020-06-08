@@ -2,3 +2,6 @@ popped value: 10popped value: 10popped value: 10
 popped value: 10
 popped value: 10
 popped value: 20
+popped value: 51
+popped value: 50
+popped value: 49

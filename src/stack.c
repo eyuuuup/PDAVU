@@ -26,14 +26,15 @@ void push(byte_t element) {
         stack -> maxSize = stack -> maxSize * 2;
     }
     
-    word_t result = (word_t) element;
+    //forcing it to be signed but why?
+    word_t result = (char) element;
     stack -> stackArray[stack -> stackSize] = result;
     stack -> stackSize++;
     print_stack();
 }
 
 word_t pop() {
-    if(stack -> stackSize > 0) {
+    if(size() > 0) {
         word_t topElement = stack -> stackArray[stack -> stackSize - 1];
         stack -> stackSize--;
         return topElement;
@@ -41,7 +42,7 @@ word_t pop() {
 }
 
 word_t top() {
-    if(stack -> stackSize > 0) {
+    if(size() > 0) {
         return stack -> stackArray[stack -> stackSize - 1];
     }
 }
@@ -54,9 +55,13 @@ word_t *get_stack() {
     return stack -> stackArray;
 }
 
+int stack_size() {
+    return size();
+}
+
 word_t tos() {
-    if(stack -> stackSize > 0) {
-        char result = top();
+    if(size() > 0) {
+        word_t result = top();
         printf("TOS: %d \n", result);
         return result;
     }
@@ -68,9 +73,9 @@ void destroy_stack() {
 }
 
 void print_stack() {
-    printf("\nSTACK\n");
+    printf("STACK: ");
     for (int i = 0; i < stack -> stackSize; i++) {
         printf("%d ", stack -> stackArray[i]);
     }
-    printf("\nSTACK\n");
+    printf("<-TOP\n");
 }

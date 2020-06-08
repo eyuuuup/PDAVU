@@ -14,6 +14,7 @@ struct ijvm_machine {
 
 static struct ijvm_machine *initMachine;
 FILE *out;
+FILE *in;
 
 int init_ijvm(char *binary_file) {
   int sizeBytes;
@@ -97,13 +98,12 @@ void destroy_ijvm() {
   free(initMachine -> textData);
   free(initMachine);
   destroy_stack();
-  printf("---------------------------");
+  printf("---------------------------\n");
 }
 
 void run() {
   while(initMachine->counter < initMachine->textSize) {
     step();
-    tos();
   }
 }
 
@@ -124,6 +124,10 @@ bool step() {
     {
       printf("DUP\n");
       initMachine->counter++;
+      word_t copy = top();
+      push(copy);
+
+
       break;
     }
     case OP_ERR:
@@ -135,12 +139,20 @@ bool step() {
     }
     case OP_GOTO:
     {
-      printf("GOTO");
+      printf("GOTO ");
+
       initMachine->counter++;
-      for(int i = 0; i < 2; i++) {
-        printf("%x ", initMachine->textData[initMachine->counter]);
-        initMachine->counter++;
-      };
+      byte_t firstElement = initMachine->textData[initMachine->counter];
+      printf("%x ", initMachine->textData[initMachine->counter]);
+      byte_t secondElement = initMachine->textData[initMachine->counter + 1];
+      printf("%x ", initMachine->textData[initMachine->counter + 1]);
+
+      // https://stackoverflow.com/questions/56716457/how-to-convert-2-bytes-into-a-signed-short-in-c
+      // https://stackoverflow.com/questions/37616480/converting-2-bytes-to-signed-int/37616634
+      signed short args = (firstElement << 8) | secondElement;
+      initMachine -> counter = initMachine -> counter + args - 1;
+      printf(", or %d", args);
+
       printf("\n");
       break;
     }
@@ -177,34 +189,81 @@ bool step() {
     }
     case OP_IFEQ:
     {
-      printf("IFEQ");
+      printf("IFEQ ");
+
       initMachine->counter++;
-      for(int i = 0; i < 2; i++) {
-        printf("%x ", initMachine->textData[initMachine->counter]);
-        initMachine->counter++;
-      };
+
+      byte_t firstElement = initMachine->textData[initMachine->counter];
+      printf("%x ", initMachine->textData[initMachine->counter]);
+      byte_t secondElement = initMachine->textData[initMachine->counter + 1];
+      printf("%x ", initMachine->textData[initMachine->counter + 1]);
+
+      // https://stackoverflow.com/questions/56716457/how-to-convert-2-bytes-into-a-signed-short-in-c
+      // https://stackoverflow.com/questions/37616480/converting-2-bytes-to-signed-int/37616634
+      signed short args = (firstElement << 8) | secondElement;
+      
+      //maybe tos??
+      if(pop() == 0) {
+        initMachine -> counter = initMachine -> counter + args - 1;
+      } else {
+        initMachine -> counter = initMachine -> counter + 2;
+      }
+      
+      printf(", or %d", args);
+
       printf("\n");
       break;
     }
     case OP_IFLT:
     {
-      printf("IFLT");
+      printf("IFLT ");
       initMachine->counter++;
-      for(int i = 0; i < 2; i++) {
-        printf("%x ", initMachine->textData[initMachine->counter]);
-        initMachine->counter++;
-      };
+
+      byte_t firstElement = initMachine->textData[initMachine->counter];
+      printf("%x ", initMachine->textData[initMachine->counter]);
+      byte_t secondElement = initMachine->textData[initMachine->counter + 1];
+      printf("%x ", initMachine->textData[initMachine->counter + 1]);
+
+      // https://stackoverflow.com/questions/56716457/how-to-convert-2-bytes-into-a-signed-short-in-c
+      // https://stackoverflow.com/questions/37616480/converting-2-bytes-to-signed-int/37616634
+      signed short args = (firstElement << 8) | secondElement;
+      
+      //maybe tos??
+      if(pop() < 0) {
+        initMachine -> counter = initMachine -> counter + args - 1;
+      } else {
+        initMachine -> counter = initMachine -> counter + 2;
+      }
+      
+      printf(", or %d", args);
       printf("\n");
       break;
     }
     case OP_ICMPEQ:
     {
-      printf("ICMPEQ");
+      printf("ICMPEQ ");
       initMachine->counter++;
-      for(int i = 0; i < 2; i++) {
-        printf("%x ", initMachine->textData[initMachine->counter]);
-        initMachine->counter++;
-      };
+
+      byte_t firstElement = initMachine->textData[initMachine->counter];
+      printf("%x ", initMachine->textData[initMachine->counter]);
+      byte_t secondElement = initMachine->textData[initMachine->counter + 1];
+      printf("%x ", initMachine->textData[initMachine->counter + 1]);
+
+      // https://stackoverflow.com/questions/56716457/how-to-convert-2-bytes-into-a-signed-short-in-c
+      // https://stackoverflow.com/questions/37616480/converting-2-bytes-to-signed-int/37616634
+      signed short args = (firstElement << 8) | secondElement;
+      
+      word_t firstPop = pop();
+      word_t secondPop = pop();
+
+      //maybe tos??
+      if(firstPop == secondPop) {
+        initMachine -> counter = initMachine -> counter + args - 1;
+      } else {
+        initMachine -> counter = initMachine -> counter + 2;
+      }
+      
+      printf(", or %d", args);
       printf("\n");
       break;
     }
@@ -229,6 +288,13 @@ bool step() {
     case OP_IN:
     {
       printf("IN\n");
+      
+      int result = getc(in);
+
+      if (result == EOF) {
+        push(0);
+      } else push(result);
+
       initMachine->counter++;
       break;
     }
@@ -302,9 +368,7 @@ bool step() {
     {
       printf("OUT\n");
       int result = pop();
-      FILE *targetWrite = fopen("resources/outputOUT.txt", "a");
-      set_output(targetWrite);
-      fprintf(out, "popped value: %d\n", result);
+      fprintf(out,"%d", result);
 
       initMachine->counter++;
       break;
@@ -341,7 +405,7 @@ bool step() {
 }
 
 void set_input(FILE *fp) {
-  //TODO
+  in = fp;
 }
 
 void set_output(FILE *fp) {
