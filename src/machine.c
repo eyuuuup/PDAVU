@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stack.h>
 #include <utility.h>
+#include <frames.h>
 
 //TODO CONSTANT AND TEXT BLOCKS INTO STRUCTS
 struct ijvm_machine {
@@ -14,8 +15,8 @@ struct ijvm_machine {
 };
 
 static struct ijvm_machine *initMachine;
-FILE *out;
-FILE *in;
+FILE *out = NULL;
+FILE *in = NULL;
 
 int init_ijvm(char *binary_file) {
   int sizeBytes;
@@ -91,6 +92,7 @@ void destroy_ijvm() {
   free(initMachine -> textData);
   free(initMachine);
   destroy_stack();
+  destroy_list();
   printf("---------------------------\n");
 }
 
@@ -203,6 +205,7 @@ bool step() {
       //maybe tos??
       if(pop() == 0) {
         initMachine -> counter = initMachine -> counter + args - 1;
+        printf("TRUE");
       } else {
         initMachine -> counter = initMachine -> counter + 2;
       }
@@ -229,6 +232,7 @@ bool step() {
       //maybe tos??
       if(pop() < 0) {
         initMachine -> counter = initMachine -> counter + args - 1;
+        printf("TRUE");
       } else {
         initMachine -> counter = initMachine -> counter + 2;
       }
@@ -258,6 +262,7 @@ bool step() {
       //maybe tos??
       if(firstPop == secondPop) {
         initMachine -> counter = initMachine -> counter + args - 1;
+        printf("TRUE");
       } else {
         initMachine -> counter = initMachine -> counter + 2;
       }
@@ -269,22 +274,35 @@ bool step() {
     }
     case OP_IINC:
     {
-      printf("IINC");
+      printf("IINC ");
 
       initMachine->counter++;
-      printf("%x\n", initMachine->textData[initMachine->counter]);
+      
+      int index = initMachine->textData[initMachine->counter];
+      printf("%d ", initMachine->textData[initMachine->counter]);
       initMachine->counter++;
-      printf("%x\n", initMachine->textData[initMachine->counter]);
+
+      int value = (int8_t) initMachine->textData[initMachine->counter];
+      printf("%d\n", initMachine->textData[initMachine->counter]);
+
+      int acValue = find_var(index) + value;
+      
+      add_frame(index, acValue);
+      print_list();
+
       initMachine->counter++;
 
       break;
     }
     case OP_ILOAD:
     {
-      printf("ILOAD");
+      printf("ILOAD ");
 
       initMachine->counter++;
+      int id = initMachine->textData[initMachine->counter];
       printf("%x\n", initMachine->textData[initMachine->counter]);
+      push(find_var(id));
+      
       initMachine->counter++;
 
       break;
@@ -337,11 +355,19 @@ bool step() {
     }
     case OP_ISTORE:
     {
-      printf("ISTORE");
+      printf("ISTORE ");
 
       initMachine->counter++;
       printf("%x\n", initMachine->textData[initMachine->counter]);
+      int id = initMachine->textData[initMachine->counter];
+      int data = pop();
+      add_frame(id,data);
+      print_list();
+      
+     
+
       initMachine->counter++;
+
 
       break;
     }
@@ -391,7 +417,13 @@ bool step() {
 
       initMachine->counter++;
       int result = pop();
-      fprintf(out,"%d", result);
+
+      if(out == NULL) {
+        FILE *fp = fopen("resources/outputOUT.txt", "a");
+        set_output(fp);
+      }
+
+      fprintf(out,"%c", result);
 
       break;
     }
@@ -463,7 +495,8 @@ word_t get_constant(int index) {
 }
 
 word_t get_local_variable(int index) {
-  return 0;
+  int value = find_var(index);
+  return value;
 }
 
 int text_size() {

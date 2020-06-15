@@ -37,6 +37,7 @@ word_t pop() {
         word_t topElement = stack -> stackArray[stack -> stackSize - 1];
         stack -> stackSize--;
         return topElement;
+        print_stack();
     }
 }
 
@@ -61,7 +62,6 @@ int stack_size() {
 word_t tos() {
     if(size() > 0) {
         word_t result = top();
-        printf("TOS: %d \n", result);
         return result;
     }
 }
