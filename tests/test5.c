@@ -14,7 +14,7 @@ void test_invokenoargs()
     assert(tos() == 0x43);
     steps(2);
     assert(tos() == 0x43);
-
+    
     destroy_ijvm();
 }
 

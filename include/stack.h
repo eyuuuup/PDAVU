@@ -41,4 +41,8 @@ void destroy_stack();
  **/
 void print_stack();
 
+void save_sp();
+
+void reset_sp();
+
 #endif

@@ -9,6 +9,7 @@ struct stack {
 };
 
 static struct stack *stack;
+int sp;
 
 int init_stack() {
     stack = (struct stack *)malloc(sizeof(struct stack));
@@ -64,6 +65,14 @@ word_t tos() {
         word_t result = top();
         return result;
     }
+}
+
+void save_sp() {
+    sp = stack->stackSize;
+}
+
+void reset_sp() {
+    stack->stackSize = sp;
 }
 
 void destroy_stack() {

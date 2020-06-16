@@ -322,14 +322,45 @@ bool step() {
     }
     case OP_INVOKEVIRTUAL:
     {
-      printf("INVOKEVIRTUAL");
-
+      printf("INVOKEVIRTUAL ");
       initMachine->counter++;
-      for(int i = 0; i < 2; i++) {
-        printf("%x ", initMachine->textData[initMachine->counter]);
-        initMachine->counter++;
-      };
+      //printf(" X%dX ", initMachine->counter);
+      byte_t index = initMachine->textData[initMachine->counter];
+      initMachine->counter++;
+
+      printf("%d", index);
+
+      word_t pointer = get_constant(index);
+      //printf(" P%dP ", pointer);
+      //printf(" X%dX ", initMachine->counter);
+      int prevPointer = initMachine->counter + 1;
+      initMachine->counter = pointer;
+      printf(" X%dX ", initMachine->counter);
+      
+      byte_t firstElement = initMachine->textData[initMachine->counter];
+      initMachine->counter++;
+      byte_t secondElement = initMachine->textData[initMachine->counter];
+      initMachine->counter++;
+      signed short amountArgs = (firstElement << 8) | secondElement;
+      printf(" X%dX ", amountArgs);
+
+      firstElement = initMachine->textData[initMachine->counter];
+      initMachine->counter++;
+      secondElement = initMachine->textData[initMachine->counter];
+      initMachine->counter++;
+      signed short areaSize = (firstElement << 8) | secondElement;
+      printf(" X%dX \n", initMachine->counter);
+
+      add_frame(0, prevPointer);
+      pop();
+      for(int i = 1; i < amountArgs; i++) {
+        add_frame(i, pop());
+      }
+      
+      save_sp();
+      print_list();
       printf("\n");
+      
 
       break;
     }
@@ -348,8 +379,14 @@ bool step() {
     case OP_IRETURN:
     {
       printf("IRETURN\n");
-
       initMachine->counter++;
+
+      int prevPointer = find_var(0);
+      initMachine->counter = prevPointer;
+      int resultValue = top();
+      reset_sp();
+      push(resultValue);
+      //printf("%d", initMachine->counter);
 
       break;
     }
