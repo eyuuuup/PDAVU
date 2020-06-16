@@ -286,7 +286,7 @@ bool step() {
       printf("%d\n", initMachine->textData[initMachine->counter]);
 
       int acValue = find_var(index) + value;
-      
+
       add_frame(index, acValue);
       print_list();
 
@@ -312,8 +312,14 @@ bool step() {
       printf("IN\n");
 
       initMachine->counter++;
-      int result = getc(in);
 
+      if (in == NULL) {
+        printf(" No IN file set\n");
+        push(0);
+        break;
+      }
+
+      int result = fgetc(in);
       if (result == EOF) {
         push(0);
       } else push(result);
@@ -324,19 +330,26 @@ bool step() {
     {
       printf("INVOKEVIRTUAL ");
       initMachine->counter++;
-      //printf(" X%dX ", initMachine->counter);
-      byte_t index = initMachine->textData[initMachine->counter];
+
+      //get opcode (short)
+      printf(" X%dX ", initMachine->counter);
+      byte_t index1 = initMachine->textData[initMachine->counter];
       initMachine->counter++;
+      byte_t index2 = initMachine->textData[initMachine->counter];
+      initMachine->counter++;
+      signed short index = (index1 << 8) | index2;
 
       printf("%d", index);
 
+      //get pointer to next area and save current pointer
       word_t pointer = get_constant(index);
-      //printf(" P%dP ", pointer);
-      //printf(" X%dX ", initMachine->counter);
-      int prevPointer = initMachine->counter + 1;
+      printf(" P%dP ", pointer);
+      printf(" X%dX ", initMachine->counter);
+      int prevPointer = initMachine->counter;
       initMachine->counter = pointer;
       printf(" X%dX ", initMachine->counter);
       
+      //get first short amount of args
       byte_t firstElement = initMachine->textData[initMachine->counter];
       initMachine->counter++;
       byte_t secondElement = initMachine->textData[initMachine->counter];
@@ -344,6 +357,7 @@ bool step() {
       signed short amountArgs = (firstElement << 8) | secondElement;
       printf(" X%dX ", amountArgs);
 
+      //get second short area size
       firstElement = initMachine->textData[initMachine->counter];
       initMachine->counter++;
       secondElement = initMachine->textData[initMachine->counter];
@@ -352,11 +366,11 @@ bool step() {
       printf(" X%dX \n", initMachine->counter);
 
       add_frame(0, prevPointer);
-      pop();
       for(int i = 1; i < amountArgs; i++) {
-        add_frame(i, pop());
+        int flip = amountArgs - i;
+        add_frame(flip, pop());
       }
-      
+      pop();
       save_sp();
       print_list();
       printf("\n");

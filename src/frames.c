@@ -11,7 +11,6 @@ struct frame {
 static struct frame *head;
 
 void add_frame(int id, int data) {
-
     struct frame* frame = (struct frame*)malloc(sizeof(struct frame));
     frame->data = data;
     frame->id = id;
@@ -31,7 +30,14 @@ void add_frame(int id, int data) {
             }
             
         }
-        curr->next = frame;
+
+        if(id == curr->id) {
+            curr->data = data;
+            free(frame);
+        } else {
+            curr->next = frame;
+        }
+        
     }
 }
 
