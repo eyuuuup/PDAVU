@@ -14,6 +14,8 @@ struct ijvm_machine {
   byte_t *data;
 };
 
+int backPointerSize = 0;
+int backPointer[10];
 static struct ijvm_machine *initMachine;
 FILE *out = NULL;
 FILE *in = NULL;
@@ -90,8 +92,9 @@ void destroy_ijvm() {
   free(initMachine -> data);
   free(initMachine -> constantData);
   free(initMachine -> textData);
-  free(initMachine);
+  free(initMachine); 
   destroy_stack();
+  backPointerSize = 0;
   destroy_list();
   printf("---------------------------\n");
 }
@@ -299,6 +302,8 @@ bool step() {
       printf("ILOAD ");
 
       initMachine->counter++;
+
+      
       int id = initMachine->textData[initMachine->counter];
       printf("%x\n", initMachine->textData[initMachine->counter]);
       push(find_var(id));
@@ -332,22 +337,33 @@ bool step() {
       initMachine->counter++;
 
       //get opcode (short)
-      printf(" X%dX ", initMachine->counter);
+      //printf(" X%dX ", initMachine->counter);
       byte_t index1 = initMachine->textData[initMachine->counter];
       initMachine->counter++;
       byte_t index2 = initMachine->textData[initMachine->counter];
       initMachine->counter++;
       signed short index = (index1 << 8) | index2;
 
-      printf("%d", index);
+      //printf("%d", index);
 
       //get pointer to next area and save current pointer
       word_t pointer = get_constant(index);
-      printf(" P%dP ", pointer);
-      printf(" X%dX ", initMachine->counter);
+      printf("%d", pointer);
+      //printf(" X%dX ", initMachine->counter);
       int prevPointer = initMachine->counter;
+
+      backPointer[backPointerSize] = prevPointer;
+      backPointerSize++;
+
+      printf("\nPOINTERS: ");
+      for(int i = 0; i < backPointerSize; i++) {
+        printf("%d ", backPointer[i]);
+      }
+      printf("\n");
+
+      
       initMachine->counter = pointer;
-      printf(" X%dX ", initMachine->counter);
+      //printf(" X%dX ", initMachine->counter);
       
       //get first short amount of args
       byte_t firstElement = initMachine->textData[initMachine->counter];
@@ -355,7 +371,7 @@ bool step() {
       byte_t secondElement = initMachine->textData[initMachine->counter];
       initMachine->counter++;
       signed short amountArgs = (firstElement << 8) | secondElement;
-      printf(" X%dX ", amountArgs);
+      //printf(" X%dX ", amountArgs);
 
       //get second short area size
       firstElement = initMachine->textData[initMachine->counter];
@@ -363,7 +379,7 @@ bool step() {
       secondElement = initMachine->textData[initMachine->counter];
       initMachine->counter++;
       signed short areaSize = (firstElement << 8) | secondElement;
-      printf(" X%dX \n", initMachine->counter);
+      //printf(" X%dX \n", initMachine->counter);
 
       add_frame(0, prevPointer);
       for(int i = 1; i < amountArgs; i++) {
@@ -395,12 +411,13 @@ bool step() {
       printf("IRETURN\n");
       initMachine->counter++;
 
-      int prevPointer = find_var(0);
+      int prevPointer = backPointer[backPointerSize - 1];
+      backPointerSize--;
       initMachine->counter = prevPointer;
       int resultValue = top();
       reset_sp();
       push(resultValue);
-      //printf("%d", initMachine->counter);
+      //printf(" X%dX ", initMachine->counter);
 
       break;
     }
@@ -470,7 +487,7 @@ bool step() {
       int result = pop();
 
       if(out == NULL) {
-        FILE *fp = fopen("resources/outputOUT.txt", "a");
+        FILE *fp = stdout;
         set_output(fp);
       }
 
