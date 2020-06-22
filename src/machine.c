@@ -19,6 +19,7 @@ int backPointer[10];
 static struct ijvm_machine *initMachine;
 FILE *out = NULL;
 FILE *in = NULL;
+bool wide = false;
 
 int init_ijvm(char *binary_file) {
   int sizeBytes;
@@ -49,16 +50,21 @@ int init_ijvm(char *binary_file) {
 
     // Arrived at last byte of constant pool size, add the bytes of the size and note the next index as data
     if(i == 11) {
-      constantSize = hexValues[i] + hexValues[i-1] + hexValues[i-2] + hexValues[i-3];
+      //int args = (firstElement << 8) | secondElement;
+      constantSize = hexValues[i] | (hexValues[i-1] << 8) | (hexValues[i-2] << 16) | (hexValues[i-3] << 24);
       constantDataIndex = i + 1;
     }
 
     // Arrived at last byte of text size, add the bytes of the size and note the next index as data
+
     if(i == (11+constantSize+8)) {
-      textSize = hexValues[i] + hexValues[i-1] + hexValues[i-2] + hexValues[i-3];
+      printf("I%dI ", i);
+      textSize = hexValues[i] | (hexValues[i-1] << 8) | (hexValues[i-2] << 16) | (hexValues[i-3] << 24);
       textDataIndex = i + 1;
     }
   }
+  printf(" C%dC ", constantSize);
+  printf(" T%dT ", textSize);
 
   // Copy over data to store in struct
   byte_t *constantData = (byte_t *)malloc(sizeof(char) * constantSize);
@@ -281,9 +287,23 @@ bool step() {
 
       initMachine->counter++;
       
-      int index = initMachine->textData[initMachine->counter];
-      printf("%d ", initMachine->textData[initMachine->counter]);
-      initMachine->counter++;
+      int index;
+      if(wide) {
+        byte_t firstElement = initMachine->textData[initMachine->counter];
+        byte_t secondElement = initMachine->textData[initMachine->counter + 1];
+        int args = (firstElement << 8) | secondElement;
+        printf("%d\n", args);
+        index = args;
+        initMachine->counter++;
+        initMachine->counter++;
+        wide = false;
+      } else {
+        index = initMachine->textData[initMachine->counter];
+        initMachine->counter++;
+      }
+      
+      printf("%d ", index);
+      
 
       int value = (int8_t) initMachine->textData[initMachine->counter];
       printf("%d\n", initMachine->textData[initMachine->counter]);
@@ -303,13 +323,22 @@ bool step() {
 
       initMachine->counter++;
 
+      if(wide) {
+        byte_t firstElement = initMachine->textData[initMachine->counter];
+        byte_t secondElement = initMachine->textData[initMachine->counter + 1];
+        int args = (firstElement << 8) | secondElement;
+        printf("%d\n", args);
+        push(find_var(args));
+        initMachine->counter = initMachine->counter + 2;
+        wide = false;
+      } else {
+        int id = initMachine->textData[initMachine->counter];
+        printf("%x\n", initMachine->textData[initMachine->counter]);
+        push(find_var(id));
+        
+        initMachine->counter++;
+      }
       
-      int id = initMachine->textData[initMachine->counter];
-      printf("%x\n", initMachine->textData[initMachine->counter]);
-      push(find_var(id));
-      
-      initMachine->counter++;
-
       break;
     }
     case OP_IN:
@@ -348,19 +377,20 @@ bool step() {
 
       //get pointer to next area and save current pointer
       word_t pointer = get_constant(index);
-      printf("%d", pointer);
+      //printf("%d", pointer);
       //printf(" X%dX ", initMachine->counter);
       int prevPointer = initMachine->counter;
 
       backPointer[backPointerSize] = prevPointer;
       backPointerSize++;
 
+      /*
       printf("\nPOINTERS: ");
       for(int i = 0; i < backPointerSize; i++) {
         printf("%d ", backPointer[i]);
       }
       printf("\n");
-
+      */
       
       initMachine->counter = pointer;
       //printf(" X%dX ", initMachine->counter);
@@ -371,7 +401,7 @@ bool step() {
       byte_t secondElement = initMachine->textData[initMachine->counter];
       initMachine->counter++;
       signed short amountArgs = (firstElement << 8) | secondElement;
-      //printf(" X%dX ", amountArgs);
+      printf("%d ", amountArgs);
 
       //get second short area size
       firstElement = initMachine->textData[initMachine->counter];
@@ -379,13 +409,13 @@ bool step() {
       secondElement = initMachine->textData[initMachine->counter];
       initMachine->counter++;
       signed short areaSize = (firstElement << 8) | secondElement;
-      //printf(" X%dX \n", initMachine->counter);
+      printf("%d\n", initMachine->counter);
 
-      add_frame(0, prevPointer);
       for(int i = 1; i < amountArgs; i++) {
         int flip = amountArgs - i;
         add_frame(flip, pop());
       }
+
       pop();
       save_sp();
       print_list();
@@ -426,15 +456,31 @@ bool step() {
       printf("ISTORE ");
 
       initMachine->counter++;
-      printf("%x\n", initMachine->textData[initMachine->counter]);
-      int id = initMachine->textData[initMachine->counter];
-      int data = pop();
-      add_frame(id,data);
-      print_list();
+      if(wide) {
+        byte_t firstElement = initMachine->textData[initMachine->counter];
+        byte_t secondElement = initMachine->textData[initMachine->counter + 1];
+        int args = (firstElement << 8) | secondElement;
+        printf("%d\n", args);
+        int data = pop();
+        add_frame(args,data);
+        print_list();
+        initMachine->counter++;
+        initMachine->counter++;
+        wide = false;
+      } else {
+        
+        printf("%x\n", initMachine->textData[initMachine->counter]);
+        int id = initMachine->textData[initMachine->counter];
+        int data = pop();
+        add_frame(id,data);
+        print_list();
+        initMachine->counter++;  
+      
+      }
+      
       
      
 
-      initMachine->counter++;
 
 
       break;
@@ -484,14 +530,14 @@ bool step() {
       printf("OUT\n");
 
       initMachine->counter++;
-      int result = pop();
+      char result = pop();
 
       if(out == NULL) {
         FILE *fp = stdout;
         set_output(fp);
       }
 
-      fprintf(out,"%c", result);
+      fwrite(&result, sizeof(char), 1, out); 
 
       break;
     }
@@ -520,7 +566,9 @@ bool step() {
     {
       initMachine->counter++;
       printf("WIDE\n");
-      
+      wide = true;
+      step();
+
       break;
     }
     default:

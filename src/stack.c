@@ -22,8 +22,8 @@ int init_stack() {
 void push(byte_t element) {
     if(stack -> stackSize >= stack -> maxSize)
     {
-        stack -> stackArray = (word_t *)realloc(stack -> stackArray, stack -> maxSize * 2);
-        stack -> maxSize = stack -> maxSize * 2;
+        stack -> stackArray = (word_t *)realloc(stack -> stackArray, stack -> maxSize * 3);
+        stack -> maxSize = stack -> maxSize * 3;
     }
     
     //forcing it to be signed but why?
