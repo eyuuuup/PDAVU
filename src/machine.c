@@ -4,7 +4,6 @@
 #include <utility.h>
 #include <frames.h>
 
-//TODO CONSTANT AND TEXT BLOCKS INTO STRUCTS
 struct ijvm_machine {
   int counter;
   int constantSize;
@@ -56,15 +55,11 @@ int init_ijvm(char *binary_file) {
     }
 
     // Arrived at last byte of text size, add the bytes of the size and note the next index as data
-
     if(i == (11+constantSize+8)) {
-      printf("I%dI ", i);
       textSize = hexValues[i] | (hexValues[i-1] << 8) | (hexValues[i-2] << 16) | (hexValues[i-3] << 24);
       textDataIndex = i + 1;
     }
   }
-  printf(" C%dC ", constantSize);
-  printf(" T%dT ", textSize);
 
   // Copy over data to store in struct
   byte_t *constantData = (byte_t *)malloc(sizeof(char) * constantSize);
@@ -113,7 +108,8 @@ void run() {
 
 bool step() {
     printf("\nCURRENT INSTRUCTION: %x\n", get_instruction());
-
+    print_stack();
+    print_list();
     switch (initMachine->textData[initMachine->counter]) {
     case OP_BIPUSH:
     {
@@ -155,8 +151,6 @@ bool step() {
       byte_t secondElement = initMachine->textData[initMachine->counter + 1];
       printf("%x ", initMachine->textData[initMachine->counter + 1]);
 
-      // https://stackoverflow.com/questions/56716457/how-to-convert-2-bytes-into-a-signed-short-in-c
-      // https://stackoverflow.com/questions/37616480/converting-2-bytes-to-signed-int/37616634
       signed short args = (firstElement << 8) | secondElement;
       initMachine -> counter = initMachine -> counter + args - 1;
       printf(", or %d", args);
@@ -194,7 +188,7 @@ bool step() {
       int secondElement = pop();  
       int result = firstElement & secondElement;
       push(result);
-      
+
       break;
     }
     case OP_IFEQ:
@@ -206,19 +200,14 @@ bool step() {
       printf("%x ", initMachine->textData[initMachine->counter]);
       byte_t secondElement = initMachine->textData[initMachine->counter + 1];
       printf("%x ", initMachine->textData[initMachine->counter + 1]);
-
-      // https://stackoverflow.com/questions/56716457/how-to-convert-2-bytes-into-a-signed-short-in-c
-      // https://stackoverflow.com/questions/37616480/converting-2-bytes-to-signed-int/37616634
       signed short args = (firstElement << 8) | secondElement;
       
-      //maybe tos??
       if(pop() == 0) {
         initMachine -> counter = initMachine -> counter + args - 1;
         printf("TRUE");
       } else {
         initMachine -> counter = initMachine -> counter + 2;
       }
-      
       printf(", or %d", args);
       printf("\n");
 
@@ -233,19 +222,14 @@ bool step() {
       printf("%x ", initMachine->textData[initMachine->counter]);
       byte_t secondElement = initMachine->textData[initMachine->counter + 1];
       printf("%x ", initMachine->textData[initMachine->counter + 1]);
-
-      // https://stackoverflow.com/questions/56716457/how-to-convert-2-bytes-into-a-signed-short-in-c
-      // https://stackoverflow.com/questions/37616480/converting-2-bytes-to-signed-int/37616634
       signed short args = (firstElement << 8) | secondElement;
       
-      //maybe tos??
       if(pop() < 0) {
         initMachine -> counter = initMachine -> counter + args - 1;
         printf("TRUE");
       } else {
         initMachine -> counter = initMachine -> counter + 2;
       }
-      
       printf(", or %d", args);
       printf("\n");
 
@@ -260,22 +244,17 @@ bool step() {
       printf("%x ", initMachine->textData[initMachine->counter]);
       byte_t secondElement = initMachine->textData[initMachine->counter + 1];
       printf("%x ", initMachine->textData[initMachine->counter + 1]);
-
-      // https://stackoverflow.com/questions/56716457/how-to-convert-2-bytes-into-a-signed-short-in-c
-      // https://stackoverflow.com/questions/37616480/converting-2-bytes-to-signed-int/37616634
       signed short args = (firstElement << 8) | secondElement;
       
       word_t firstPop = pop();
       word_t secondPop = pop();
 
-      //maybe tos??
       if(firstPop == secondPop) {
         initMachine -> counter = initMachine -> counter + args - 1;
         printf("TRUE");
       } else {
         initMachine -> counter = initMachine -> counter + 2;
       }
-      
       printf(", or %d", args);
       printf("\n");
 
@@ -286,33 +265,29 @@ bool step() {
       printf("IINC ");
 
       initMachine->counter++;
-      
       int index;
+
       if(wide) {
         byte_t firstElement = initMachine->textData[initMachine->counter];
         byte_t secondElement = initMachine->textData[initMachine->counter + 1];
         int args = (firstElement << 8) | secondElement;
         printf("%d\n", args);
+
         index = args;
-        initMachine->counter++;
-        initMachine->counter++;
+        initMachine->counter = initMachine->counter + 2;
+
         wide = false;
       } else {
         index = initMachine->textData[initMachine->counter];
         initMachine->counter++;
       }
-      
       printf("%d ", index);
-      
 
       int value = (int8_t) initMachine->textData[initMachine->counter];
       printf("%d\n", initMachine->textData[initMachine->counter]);
 
       int acValue = find_var(index) + value;
-
       add_frame(index, acValue);
-      print_list();
-
       initMachine->counter++;
 
       break;
@@ -322,13 +297,13 @@ bool step() {
       printf("ILOAD ");
 
       initMachine->counter++;
-
       if(wide) {
         byte_t firstElement = initMachine->textData[initMachine->counter];
         byte_t secondElement = initMachine->textData[initMachine->counter + 1];
         int args = (firstElement << 8) | secondElement;
         printf("%d\n", args);
         push(find_var(args));
+
         initMachine->counter = initMachine->counter + 2;
         wide = false;
       } else {
@@ -338,7 +313,7 @@ bool step() {
         
         initMachine->counter++;
       }
-      
+
       break;
     }
     case OP_IN:
@@ -346,11 +321,8 @@ bool step() {
       printf("IN\n");
 
       initMachine->counter++;
-
       if (in == NULL) {
-        printf(" No IN file set\n");
-        push(0);
-        break;
+        set_input(stdin);
       }
 
       int result = fgetc(in);
@@ -363,38 +335,22 @@ bool step() {
     case OP_INVOKEVIRTUAL:
     {
       printf("INVOKEVIRTUAL ");
-      initMachine->counter++;
 
+      initMachine->counter++;
       //get opcode (short)
-      //printf(" X%dX ", initMachine->counter);
       byte_t index1 = initMachine->textData[initMachine->counter];
       initMachine->counter++;
       byte_t index2 = initMachine->textData[initMachine->counter];
       initMachine->counter++;
       signed short index = (index1 << 8) | index2;
 
-      //printf("%d", index);
-
       //get pointer to next area and save current pointer
       word_t pointer = get_constant(index);
-      //printf("%d", pointer);
-      //printf(" X%dX ", initMachine->counter);
       int prevPointer = initMachine->counter;
-
       backPointer[backPointerSize] = prevPointer;
       backPointerSize++;
-
-      /*
-      printf("\nPOINTERS: ");
-      for(int i = 0; i < backPointerSize; i++) {
-        printf("%d ", backPointer[i]);
-      }
-      printf("\n");
-      */
-      
       initMachine->counter = pointer;
-      //printf(" X%dX ", initMachine->counter);
-      
+
       //get first short amount of args
       byte_t firstElement = initMachine->textData[initMachine->counter];
       initMachine->counter++;
@@ -409,7 +365,7 @@ bool step() {
       secondElement = initMachine->textData[initMachine->counter];
       initMachine->counter++;
       signed short areaSize = (firstElement << 8) | secondElement;
-      printf("%d\n", initMachine->counter);
+      printf("%d\n", areaSize);
 
       for(int i = 1; i < amountArgs; i++) {
         int flip = amountArgs - i;
@@ -418,10 +374,8 @@ bool step() {
 
       pop();
       save_sp();
-      print_list();
       printf("\n");
       
-
       break;
     }
     case OP_IOR:
@@ -439,15 +393,14 @@ bool step() {
     case OP_IRETURN:
     {
       printf("IRETURN\n");
-      initMachine->counter++;
 
+      initMachine->counter++;
       int prevPointer = backPointer[backPointerSize - 1];
       backPointerSize--;
       initMachine->counter = prevPointer;
       int resultValue = top();
       reset_sp();
       push(resultValue);
-      //printf(" X%dX ", initMachine->counter);
 
       break;
     }
@@ -458,30 +411,25 @@ bool step() {
       initMachine->counter++;
       if(wide) {
         byte_t firstElement = initMachine->textData[initMachine->counter];
+        printf("%x ", initMachine->textData[initMachine->counter]);
         byte_t secondElement = initMachine->textData[initMachine->counter + 1];
+        printf("%x ", initMachine->textData[initMachine->counter + 1]);
         int args = (firstElement << 8) | secondElement;
         printf("%d\n", args);
         int data = pop();
         add_frame(args,data);
-        print_list();
+        
         initMachine->counter++;
         initMachine->counter++;
         wide = false;
       } else {
-        
         printf("%x\n", initMachine->textData[initMachine->counter]);
         int id = initMachine->textData[initMachine->counter];
         int data = pop();
+
         add_frame(id,data);
-        print_list();
         initMachine->counter++;  
-      
       }
-      
-      
-     
-
-
 
       break;
     }
@@ -512,6 +460,7 @@ bool step() {
     
       word_t args = get_constant(index);
       push(args);
+
       initMachine -> counter = initMachine -> counter + 2;
       printf("\n");
 
@@ -520,9 +469,7 @@ bool step() {
     case OP_NOP:
     {
       printf("NOP\n");
-
       initMachine->counter++;
-
       break;
     }
     case OP_OUT:
@@ -544,10 +491,8 @@ bool step() {
     case OP_POP:
     {
       printf("POP\n");
-
       initMachine->counter++;
       pop();
-      
       break;
     }
     case OP_SWAP:
@@ -565,6 +510,7 @@ bool step() {
     case OP_WIDE:
     {
       initMachine->counter++;
+      
       printf("WIDE\n");
       wide = true;
       step();
@@ -607,7 +553,6 @@ word_t get_constant(int index) {
 
   word_t result = (array[0] << 24) | (array[1] << 16) | (array[2] << 8) | array[3];
   return result;
-
 }
 
 word_t get_local_variable(int index) {

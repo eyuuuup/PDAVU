@@ -19,18 +19,21 @@ int init_stack() {
     return 0;
 }
 
-void push(byte_t element) {
+void push(word_t element) {
     if(stack -> stackSize >= stack -> maxSize)
     {
         stack -> stackArray = (word_t *)realloc(stack -> stackArray, stack -> maxSize * 3);
         stack -> maxSize = stack -> maxSize * 3;
     }
     
-    //forcing it to be signed but why?
-    word_t result = (char) element;
+    word_t result;
+    if(element > 255) {
+        result = element;
+    } else {
+        result = (char) element;
+    }
     stack -> stackArray[stack -> stackSize] = result;
     stack -> stackSize++;
-    print_stack();
 }
 
 word_t pop() {
@@ -38,7 +41,6 @@ word_t pop() {
         word_t topElement = stack -> stackArray[stack -> stackSize - 1];
         stack -> stackSize--;
         return topElement;
-        print_stack();
     }
 }
 

@@ -14,7 +14,7 @@ int init_stack();
 /**
  * Pushes given element on the stack, converting it to an word and signing it
  **/
-void push(byte_t element);
+void push(word_t element);
 
 /** 
  * Pops a value of the stack and returns it
