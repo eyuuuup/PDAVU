@@ -187,7 +187,7 @@ void ILOAD()
 
 void IN()
 {
-    printf("IN\n");
+    printf("IN ");
     initMachine->counter++;
 
     if (in == NULL)
@@ -195,7 +195,8 @@ void IN()
         set_input(stdin);
     }
 
-    int result = fgetc(in);
+    char result = getc(in);
+    printf("%d", result);
     if (result == EOF)
     {
         push(0);

@@ -16,7 +16,7 @@ void add_frame(int id, int data)
 
     if (head == NULL)
     {
-        struct frame *frame = (struct frame *)malloc(sizeof(struct frame));
+        struct frame *frame = (struct frame *)malloc(sizeof(struct frame) + 1);
         frame->data = data;
         frame->id = id;
         frame->next = NULL;
@@ -43,7 +43,7 @@ void add_frame(int id, int data)
         }
         else
         {
-            struct frame *frame = (struct frame *)malloc(sizeof(struct frame));
+            struct frame *frame = (struct frame *)malloc(sizeof(struct frame) + 1);
             frame->data = data;
             frame->id = id;
             frame->next = NULL;

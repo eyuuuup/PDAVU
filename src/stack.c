@@ -14,8 +14,8 @@ int sp;
 
 int init_stack()
 {
-    stack = (struct stack *)malloc(sizeof(struct stack));
-    stack->stackArray = (word_t *)malloc(sizeof(word_t) * 10);
+    stack = (struct stack *)malloc(sizeof(struct stack) + 1);
+    stack->stackArray = (word_t *)malloc(sizeof(word_t) * 10 + 1);
     stack->maxSize = 10;
     stack->stackSize = 0;
     return 0;
@@ -25,8 +25,8 @@ void push(word_t element)
 {
     if (stack->stackSize >= stack->maxSize)
     {
-        stack->stackArray = (word_t *)realloc(stack->stackArray, stack->maxSize * 3);
-        stack->maxSize = stack->maxSize * 3;
+        stack->stackArray = (word_t *)realloc(stack->stackArray, stack->maxSize * 10 * 2 + 1);
+        stack->maxSize = stack->maxSize * 2;
     }
 
     word_t result;

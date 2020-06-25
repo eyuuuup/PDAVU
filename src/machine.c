@@ -13,7 +13,7 @@ bool wide = false;
 
 int init_ijvm(char *binary_file)
 {
-  int sizeBytes;
+  int sizeBytes = 0;
   FILE *fp;
 
   // Get amount of bytes in file by moving pointer up and down
@@ -25,15 +25,15 @@ int init_ijvm(char *binary_file)
   char buffer[sizeBytes];
 
   // Allocate memory because it will be used in global struct
-  byte_t *hexValues = (byte_t *)malloc(sizeof(char) * sizeBytes);
+  byte_t *hexValues = (byte_t *)malloc(sizeof(char) * sizeBytes + 1);
 
   // Read file containing sizeBytes of bytes and split them up in sizeof(char)
   fread(buffer, sizeof(char), sizeBytes, fp);
 
-  int constantSize;
-  int constantDataIndex;
-  int textSize;
-  int textDataIndex;
+  int constantSize = 0;
+  int constantDataIndex = 0;
+  int textSize = 0;
+  int textDataIndex = 0;
   for (int i = 0; i < sizeBytes; i++)
   {
 
@@ -57,21 +57,21 @@ int init_ijvm(char *binary_file)
   }
 
   // Copy over data to store in struct
-  byte_t *constantData = (byte_t *)malloc(sizeof(char) * constantSize);
+  byte_t *constantData = (byte_t *)malloc(sizeof(char) * constantSize + 1);
   for (int i = 0; i < constantSize; i++)
   {
     constantData[i] = hexValues[constantDataIndex + i];
   }
 
   // Allocate memory because it will be used in global struct
-  byte_t *textData = (byte_t *)malloc(sizeof(char) * textSize);
+  byte_t *textData = (byte_t *)malloc(sizeof(char) * textSize + 1);
   for (int i = 0; i < textSize; i++)
   {
     textData[i] = hexValues[textDataIndex + i];
   }
 
   // Allocate memory for global struct and point to members
-  initMachine = (struct ijvm_machine *)malloc(sizeof(struct ijvm_machine));
+  initMachine = (struct ijvm_machine *)malloc(sizeof(struct ijvm_machine) + 1);
   initMachine->counter = 0;
   initMachine->textSize = textSize;
   initMachine->constantSize = constantSize;
