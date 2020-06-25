@@ -2,36 +2,48 @@
 #include <stdlib.h>
 #include <frames.h>
 
-struct frame {
+struct frame
+{
     int id;
     int data;
-    struct frame* next;
+    struct frame *next;
 };
 
 static struct frame *head;
 
-void add_frame(int id, int data) {
-    
-    if(head == NULL) {
-        struct frame* frame = (struct frame*)malloc(sizeof(struct frame));
+void add_frame(int id, int data)
+{
+
+    if (head == NULL)
+    {
+        struct frame *frame = (struct frame *)malloc(sizeof(struct frame));
         frame->data = data;
         frame->id = id;
         frame->next = NULL;
         head = frame;
-    } else {
+    }
+    else
+    {
         struct frame *curr = head;
-        while (curr->next != NULL) {
-            if(curr->id == id) {
+        while (curr->next != NULL)
+        {
+            if (curr->id == id)
+            {
                 curr->data = data;
                 return;
-            } else {
+            }
+            else
+            {
                 curr = curr->next;
             }
         }
-        if(id == curr->id) {
+        if (id == curr->id)
+        {
             curr->data = data;
-        } else {
-            struct frame* frame = (struct frame*)malloc(sizeof(struct frame));
+        }
+        else
+        {
+            struct frame *frame = (struct frame *)malloc(sizeof(struct frame));
             frame->data = data;
             frame->id = id;
             frame->next = NULL;
@@ -40,37 +52,42 @@ void add_frame(int id, int data) {
     }
 }
 
-void remove_frame() {
-    head = head->next;
-}
-
-int find_var(int id) { 
+int find_var(int id)
+{
     struct frame *curr = head;
-    while (curr != NULL) {
-        if(curr->id == id) {
+    while (curr != NULL)
+    {
+        if (curr->id == id)
+        {
             return curr->data;
-        } else {
+        }
+        else
+        {
             curr = curr->next;
         }
     }
     return -1;
-} 
+}
 
-void print_list() { 
+void print_list()
+{
     printf("LIST:");
     struct frame *curr = head;
-    while (curr != NULL) { 
-        printf("{%d, %d} ", curr->id, curr->data); 
-        curr = curr->next; 
-    } 
+    while (curr != NULL)
+    {
+        printf("{%d, %d} ", curr->id, curr->data);
+        curr = curr->next;
+    }
     printf("\n");
-} 
-  
-void destroy_list() {
+}
+
+void destroy_list()
+{
     struct frame *curr = head;
-    while (curr != NULL) { 
+    while (curr != NULL)
+    {
         free(curr);
-        curr = curr->next; 
+        curr = curr->next;
     }
     head = NULL;
 }

@@ -19,19 +19,6 @@ void test_tanenbaum()
 
     run();
 
-    /*
-    char ch;
-    while (1) {
-        ch=fgetc(stdin);
-
-        if (ch == 0x0A) {
-            steps(5);
-        }
-        ch=getchar();
-        
-    }
-    */
-
     rewind(output_file);
     fread(buf, 1, 127, output_file);
     assert(strncmp(buf, "OK", 15) == 0);

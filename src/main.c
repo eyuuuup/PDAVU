@@ -3,7 +3,7 @@
 
 void print_help()
 {
-    printf("Usage: ./ijvm binary \n");
+  printf("Usage: ./ijvm binary \n");
 }
 
 int main(int argc, char **argv)
@@ -16,8 +16,8 @@ int main(int argc, char **argv)
 
   if (init_ijvm(argv[1]) < 0)
   {
-      fprintf(stderr, "Couldn't load binary %s\n", argv[1]);
-      return 1;
+    fprintf(stderr, "Couldn't load binary %s\n", argv[1]);
+    return 1;
   }
 
   run();
