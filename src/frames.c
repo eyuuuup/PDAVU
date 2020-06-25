@@ -83,11 +83,13 @@ void print_list()
 
 void destroy_list()
 {
-    struct frame *curr = head;
-    while (curr != NULL)
+    struct frame *temp;
+    while (head != NULL)
     {
-        free(curr);
-        curr = curr->next;
+        temp = head;
+        head = head->next;
+        free(temp);
+        temp = NULL;
     }
     head = NULL;
 }
