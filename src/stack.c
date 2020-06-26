@@ -1,6 +1,7 @@
 #include <ijvm.h>
 #include <stdlib.h>
 #include <stack.h>
+#include <util.h>
 
 struct stack
 {
@@ -49,7 +50,7 @@ word_t pop()
         word_t topElement = stack->stackArray[stack->stackSize - 1];
         stack->stackSize--;
         return topElement;
-    }
+    } else return -1;
 }
 
 word_t top()
@@ -57,7 +58,7 @@ word_t top()
     if (size() > 0)
     {
         return stack->stackArray[stack->stackSize - 1];
-    }
+    } else return -1;
 }
 
 int size()
@@ -81,7 +82,7 @@ word_t tos()
     {
         word_t result = top();
         return result;
-    }
+    } else return -1;
 }
 
 void save_sp()
@@ -102,10 +103,10 @@ void destroy_stack()
 
 void print_stack()
 {
-    printf("STACK: ");
+    dprintf("STACK: ");
     for (int i = 0; i < stack->stackSize; i++)
     {
-        printf("%d ", stack->stackArray[i]);
+        dprintf("%d ", stack->stackArray[i]);
     }
-    printf("<-TOP\n");
+    dprintf("<-TOP\n");
 }

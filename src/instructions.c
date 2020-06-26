@@ -2,20 +2,21 @@
 #include <stack.h>
 #include <frames.h>
 #include "utility.h"
+#include <util.h>
 
 void BIPUSH()
 {
-    printf("BIPUSH ");
+    dprintf("BIPUSH ");
     initMachine->counter++;
 
-    printf("%d, or %x\n", initMachine->textData[initMachine->counter], initMachine->textData[initMachine->counter]);
+    dprintf("%d, or %x\n", initMachine->textData[initMachine->counter], initMachine->textData[initMachine->counter]);
     push(initMachine->textData[initMachine->counter]);
     initMachine->counter++;
 }
 
 void DUP()
 {
-    printf("DUP\n");
+    dprintf("DUP\n");
     initMachine->counter++;
 
     word_t copy = top();
@@ -24,7 +25,7 @@ void DUP()
 
 bool ERR()
 {
-    printf("ERR\n");
+    dprintf("ERR\n");
     initMachine->counter++;
 
     return false;
@@ -32,18 +33,18 @@ bool ERR()
 
 void GOTO()
 {
-    printf("GOTO ");
+    dprintf("GOTO ");
     initMachine->counter++;
 
     signed short args = getArgs(false);
     initMachine->counter = initMachine->counter + args - 1;
-    printf(", or %d", args);
-    printf("\n");
+    dprintf(", or %d", args);
+    dprintf("\n");
 }
 
 bool HALT()
 {
-    printf("HALT\n");
+    dprintf("HALT\n");
     initMachine->counter++;
 
     return false;
@@ -51,7 +52,7 @@ bool HALT()
 
 void IADD()
 {
-    printf("IADD\n");
+    dprintf("IADD\n");
     initMachine->counter++;
 
     int firstElement = pop();
@@ -62,7 +63,7 @@ void IADD()
 
 void IAND()
 {
-    printf("IAND\n");
+    dprintf("IAND\n");
     initMachine->counter++;
 
     int firstElement = pop();
@@ -73,45 +74,45 @@ void IAND()
 
 void IFEQ()
 {
-    printf("IFEQ ");
+    dprintf("IFEQ ");
     initMachine->counter++;
 
     signed short args = getArgs(false);
     if (pop() == 0)
     {
         initMachine->counter = initMachine->counter + args - 1;
-        printf("TRUE");
+        dprintf("TRUE");
     }
     else
     {
         initMachine->counter = initMachine->counter + 2;
     }
-    printf(", or %d", args);
-    printf("\n");
+    dprintf(", or %d", args);
+    dprintf("\n");
 }
 
 void IFLT()
 {
-    printf("IFLT ");
+    dprintf("IFLT ");
     initMachine->counter++;
 
     signed short args = getArgs(false);
     if (pop() < 0)
     {
         initMachine->counter = initMachine->counter + args - 1;
-        printf("TRUE");
+        dprintf("TRUE");
     }
     else
     {
         initMachine->counter = initMachine->counter + 2;
     }
-    printf(", or %d", args);
-    printf("\n");
+    dprintf(", or %d", args);
+    dprintf("\n");
 }
 
 void IF_ICMPEQ()
 {
-    printf("ICMPEQ ");
+    dprintf("ICMPEQ ");
     initMachine->counter++;
 
     signed short args = getArgs(false);
@@ -122,26 +123,26 @@ void IF_ICMPEQ()
     if (firstPop == secondPop)
     {
         initMachine->counter = initMachine->counter + args - 1;
-        printf("TRUE");
+        dprintf("TRUE");
     }
     else
     {
         initMachine->counter = initMachine->counter + 2;
     }
-    printf(", or %d", args);
-    printf("\n");
+    dprintf(", or %d", args);
+    dprintf("\n");
 }
 
 void IINC()
 {
-    printf("IINC ");
+    dprintf("IINC ");
     initMachine->counter++;
 
     int index;
     if (wide)
     {
         index = getArgs(false);
-        printf("%d\n", index);
+        dprintf("%d\n", index);
         initMachine->counter = initMachine->counter + 2;
         wide = false;
     }
@@ -150,10 +151,10 @@ void IINC()
         index = initMachine->textData[initMachine->counter];
         initMachine->counter++;
     }
-    printf("%d ", index);
+    dprintf("%d ", index);
 
     int value = (int8_t)initMachine->textData[initMachine->counter];
-    printf("%d\n", initMachine->textData[initMachine->counter]);
+    dprintf("%d\n", initMachine->textData[initMachine->counter]);
 
     int acValue = find_var(index) + value;
     add_frame(index, acValue);
@@ -162,7 +163,7 @@ void IINC()
 
 void ILOAD()
 {
-    printf("ILOAD ");
+    dprintf("ILOAD ");
 
     initMachine->counter++;
     if (wide)
@@ -170,7 +171,7 @@ void ILOAD()
         byte_t firstElement = initMachine->textData[initMachine->counter];
         byte_t secondElement = initMachine->textData[initMachine->counter + 1];
         int args = (firstElement << 8) | secondElement;
-        printf("%d\n", args);
+        dprintf("%d\n", args);
         push(find_var(args));
 
         initMachine->counter = initMachine->counter + 2;
@@ -179,7 +180,7 @@ void ILOAD()
     else
     {
         int id = initMachine->textData[initMachine->counter];
-        printf("%x\n", initMachine->textData[initMachine->counter]);
+        dprintf("%x\n", initMachine->textData[initMachine->counter]);
         push(find_var(id));
         initMachine->counter++;
     }
@@ -187,7 +188,7 @@ void ILOAD()
 
 void IN()
 {
-    printf("IN ");
+    dprintf("IN ");
     initMachine->counter++;
 
     if (in == NULL)
@@ -196,7 +197,7 @@ void IN()
     }
 
     char result = getc(in);
-    printf("%d", result);
+    dprintf("%d", result);
     if (result == EOF)
     {
         push(0);
@@ -207,7 +208,7 @@ void IN()
 
 void INVOKEVIRTUAL()
 {
-    printf("INVOKEVIRTUAL ");
+    dprintf("INVOKEVIRTUAL ");
     initMachine->counter++;
 
     //get opcode (short)
@@ -222,11 +223,11 @@ void INVOKEVIRTUAL()
 
     //get first short amount of args
     signed short amountArgs = getArgs(true);
-    printf("%d ", amountArgs);
+    dprintf("%d ", amountArgs);
 
     //get second short area size
     signed short areaSize = getArgs(true);
-    printf("%d\n", areaSize);
+    dprintf("%d\n", areaSize);
 
     for (int i = 1; i < amountArgs; i++)
     {
@@ -236,12 +237,12 @@ void INVOKEVIRTUAL()
 
     pop();
     save_sp();
-    printf("\n");
+    dprintf("\n");
 }
 
 void IOR()
 {
-    printf("IOR\n");
+    dprintf("IOR\n");
     initMachine->counter++;
 
     int firstElement = pop();
@@ -252,7 +253,7 @@ void IOR()
 
 void IRETURN()
 {
-    printf("IRETURN\n");
+    dprintf("IRETURN\n");
     initMachine->counter++;
 
     int prevPointer = backPointer[backPointerSize - 1];
@@ -266,17 +267,17 @@ void IRETURN()
 
 void ISTORE()
 {
-    printf("ISTORE ");
+    dprintf("ISTORE ");
 
     initMachine->counter++;
     if (wide)
     {
         byte_t firstElement = initMachine->textData[initMachine->counter];
-        printf("%x ", initMachine->textData[initMachine->counter]);
+        dprintf("%x ", initMachine->textData[initMachine->counter]);
         byte_t secondElement = initMachine->textData[initMachine->counter + 1];
-        printf("%x ", initMachine->textData[initMachine->counter + 1]);
+        dprintf("%x ", initMachine->textData[initMachine->counter + 1]);
         int args = (firstElement << 8) | secondElement;
-        printf("%d\n", args);
+        dprintf("%d\n", args);
 
         int data = pop();
         add_frame(args, data);
@@ -286,7 +287,7 @@ void ISTORE()
     }
     else
     {
-        printf("%x\n", initMachine->textData[initMachine->counter]);
+        dprintf("%x\n", initMachine->textData[initMachine->counter]);
         int id = initMachine->textData[initMachine->counter];
         int data = pop();
 
@@ -297,7 +298,7 @@ void ISTORE()
 
 void ISUB()
 {
-    printf("ISUB\n");
+    dprintf("ISUB\n");
     initMachine->counter++;
 
     int firstElement = pop();
@@ -308,33 +309,33 @@ void ISUB()
 
 void LDC_W()
 {
-    printf("LDC_W ");
+    dprintf("LDC_W ");
 
     initMachine->counter++;
     byte_t firstElement = initMachine->textData[initMachine->counter];
-    printf("%x ", initMachine->textData[initMachine->counter]);
+    dprintf("%x ", initMachine->textData[initMachine->counter]);
     byte_t secondElement = initMachine->textData[initMachine->counter + 1];
-    printf("%x ", initMachine->textData[initMachine->counter + 1]);
+    dprintf("%x ", initMachine->textData[initMachine->counter + 1]);
 
     unsigned short index = (firstElement << 8) | secondElement;
-    printf(", or %d\n", index);
+    dprintf(", or %d\n", index);
 
     word_t args = get_constant(index);
     push(args);
 
     initMachine->counter = initMachine->counter + 2;
-    printf("\n");
+    dprintf("\n");
 }
 
 void NOP()
 {
-    printf("NOP\n");
+    dprintf("NOP\n");
     initMachine->counter++;
 }
 
 void OUT()
 {
-    printf("OUT\n");
+    dprintf("OUT\n");
 
     initMachine->counter++;
     char result = pop();
@@ -350,14 +351,14 @@ void OUT()
 
 void POP()
 {
-    printf("POP\n");
+    dprintf("POP\n");
     initMachine->counter++;
     pop();
 }
 
 void SWAP()
 {
-    printf("SWAP\n");
+    dprintf("SWAP\n");
     initMachine->counter++;
 
     int firstElement = pop();
@@ -369,7 +370,7 @@ void SWAP()
 void WIDE()
 {
     initMachine->counter++;
-    printf("WIDE\n");
+    dprintf("WIDE\n");
     wide = true;
     step();
 }
@@ -382,20 +383,20 @@ signed short getArgs(bool increase)
     if (increase)
     {
         firstElement = initMachine->textData[initMachine->counter];
-        printf("%x ", initMachine->textData[initMachine->counter]);
+        dprintf("%x ", initMachine->textData[initMachine->counter]);
         initMachine->counter++;
 
         secondElement = initMachine->textData[initMachine->counter];
-        printf("%x ", initMachine->textData[initMachine->counter]);
+        dprintf("%x ", initMachine->textData[initMachine->counter]);
         initMachine->counter++;
     }
     else
     {
         firstElement = initMachine->textData[initMachine->counter];
-        printf("%x ", initMachine->textData[initMachine->counter]);
+        dprintf("%x ", initMachine->textData[initMachine->counter]);
 
         secondElement = initMachine->textData[initMachine->counter + 1];
-        printf("%x ", initMachine->textData[initMachine->counter + 1]);
+        dprintf("%x ", initMachine->textData[initMachine->counter + 1]);
     }
 
     signed short args = (firstElement << 8) | secondElement;

@@ -3,6 +3,7 @@
 #include <utility.h>
 #include <frames.h>
 #include <instructions.h>
+#include <util.h>
 
 int backPointerSize = 0;
 int backPointer[10];
@@ -10,6 +11,7 @@ struct ijvm_machine *initMachine;
 FILE *out = NULL;
 FILE *in = NULL;
 bool wide = false;
+bool finishedProgram = false;
 
 int init_ijvm(char *binary_file)
 {
@@ -94,7 +96,7 @@ void destroy_ijvm()
   destroy_stack();
   backPointerSize = 0;
   destroy_list();
-  printf("---------------------------\n");
+  dprintf("---------------------------\n");
 }
 
 void run()
@@ -104,14 +106,16 @@ void run()
     bool continueProgram = step();
     if (!continueProgram)
     {
+      finishedProgram = true;
       break;
     }
   }
+  finishedProgram = true;
 }
 
 bool step()
 {
-  printf("\nCURRENT INSTRUCTION: %x\n", get_instruction());
+  dprintf("\nCURRENT INSTRUCTION: %x\n", get_instruction());
   print_stack();
   print_list();
   switch (initMachine->textData[initMachine->counter])
@@ -237,6 +241,7 @@ bool step()
     break;
   }
   default:
+    finishedProgram = true;
     initMachine->counter++;
     break;
   }
@@ -281,6 +286,10 @@ word_t get_constant(int index)
   return result;
 }
 
+bool finished() {
+  return finishedProgram;
+}
+
 word_t get_local_variable(int index)
 {
   int value = find_var(index);
@@ -296,12 +305,12 @@ void print_blocks()
 {
   for (int i = 0; i < initMachine->constantSize; i++)
   {
-    printf("%x ", initMachine->constantData[i]);
+    dprintf("%x ", initMachine->constantData[i]);
   }
-  printf("\n");
+  dprintf("\n");
   for (int i = 0; i < initMachine->textSize; i++)
   {
-    printf("%x ", initMachine->textData[i]);
+    dprintf("%x ", initMachine->textData[i]);
   }
-  printf("\n");
+  dprintf("\n");
 }

@@ -1,6 +1,7 @@
 #include <ijvm.h>
 #include <stdlib.h>
 #include <frames.h>
+#include <util.h>
 
 struct frame
 {
@@ -71,14 +72,14 @@ int find_var(int id)
 
 void print_list()
 {
-    printf("LIST:");
+    dprintf("LIST:");
     struct frame *curr = head;
     while (curr != NULL)
     {
-        printf("{%d, %d} ", curr->id, curr->data);
+        dprintf("{%d, %d} ", curr->id, curr->data);
         curr = curr->next;
     }
-    printf("\n");
+    dprintf("\n");
 }
 
 void destroy_list()
